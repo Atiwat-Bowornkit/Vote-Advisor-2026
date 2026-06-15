@@ -277,30 +277,14 @@ function renderDashboardScreen(container) {
                       <div class="chart-bar-fill" style="width: ${pct}%; background: ${barColor};"></div>
                     </div>
                     
-                    <!-- Action buttons row -->
-                    <div style="display: flex; gap: 0.4rem; align-items: center;">
-                      <button class="btn btn-secondary btn-sm toggle-admin-student-btn" style="flex: 1; padding: 0.15rem 0.4rem; font-size: 0.65rem; justify-content: space-between; border-radius: 4px;" data-id="${adv.id}">
-                        <span>ดูรายชื่อนักศึกษา (${advStudents.length} คน)</span>
-                        <span class="indicator">▼</span>
+                     <!-- Action buttons row -->
+                    <div style="display: flex; gap: 0.4rem; align-items: center; margin-top: 0.25rem;">
+                      <button class="btn btn-secondary btn-sm edit-advisor-btn" style="flex: 1; padding: 0.15rem 0.4rem; font-size: 0.65rem; border-radius: 4px; background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--color-primary); justify-content: center;" data-id="${adv.id}">
+                        แก้ไข
                       </button>
-                      <button class="btn btn-danger btn-sm delete-advisor-btn" style="padding: 0.15rem 0.4rem; font-size: 0.65rem; border-radius: 4px; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: var(--color-danger);" data-id="${adv.id}" data-name="${adv.name}">
-                        ลบอาจารย์
+                      <button class="btn btn-danger btn-sm delete-advisor-btn" style="flex: 1; padding: 0.15rem 0.4rem; font-size: 0.65rem; border-radius: 4px; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: var(--color-danger); justify-content: center;" data-id="${adv.id}" data-name="${adv.name}">
+                        ลบ
                       </button>
-                    </div>
-                    <div>
-                      <div class="admin-student-list-box" style="display: none; background: rgba(0,0,0,0.25); border-radius: 6px; padding: 0.4rem; margin-top: 0.25rem; border: 1px solid var(--border-subtle); max-height: 120px; overflow-y: auto;">
-                        ${advStudents.length === 0 
-                          ? `<span style="color: var(--text-muted); font-size: 0.65rem; display: block; text-align: center; padding: 0.25rem 0;">ไม่มีรายชื่อโหวต</span>`
-                          : `<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem;">
-                              ${advStudents.map((s, idx) => `
-                                <li style="display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 0.65rem;">
-                                  <span>${idx + 1}. ${s.studentName}</span>
-                                  <span style="font-family: monospace; color: var(--text-muted);">${s.studentId}</span>
-                                </li>
-                              `).join('')}
-                             </ul>`
-                        }
-                      </div>
                     </div>
                   </div>
                 `;
@@ -438,6 +422,55 @@ function renderDashboardScreen(container) {
 
     </main>
     <div class="toast-container" id="toast-container"></div>
+
+    <!-- Edit Advisor Modal Overlay -->
+    <div class="modal-overlay" id="edit-advisor-modal">
+      <div class="modal-content" style="text-align: left; max-width: 500px; padding: 2rem;">
+        <h3 class="modal-title" style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; justify-content: flex-start;">
+          <span style="color: var(--color-primary); width: 1.5rem; height: 1.5rem; display: inline-flex;">${ICONS.plus}</span>
+          แก้ไขข้อมูลอาจารย์
+        </h3>
+        <form id="edit-advisor-form" style="display: flex; flex-direction: column; gap: 1rem;">
+          <input type="hidden" id="edit-adv-id" />
+          
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label for="edit-adv-name" style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">ชื่อ - นามสกุล (ภาษาไทย) *</label>
+            <input type="text" id="edit-adv-name" class="form-input" placeholder="เช่น ผศ.ดร. มานะ ใจดี" required style="width: 100%; font-size: 0.85rem;" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label for="edit-adv-email" style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">อีเมลติดต่อ</label>
+            <input type="email" id="edit-adv-email" class="form-input" placeholder="เช่น mana.ja@university.ac.th" style="width: 100%; font-size: 0.85rem;" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label for="edit-adv-capacity" style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">จำนวนรับสูงสุด (คน) *</label>
+            <input type="number" id="edit-adv-capacity" class="form-input" min="1" required style="width: 100%; font-size: 0.85rem;" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label for="edit-adv-interests" style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">หัวข้อวิจัย / ความสนใจ (คั่นด้วยจุลภาค \`,\`) *</label>
+            <input type="text" id="edit-adv-interests" class="form-input" placeholder="เช่น AI, Machine Learning, IoT" required style="width: 100%; font-size: 0.85rem;" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">รูปโปรไฟล์อาจารย์</label>
+            <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.5rem;">
+              <img id="edit-adv-image-preview" src="" style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-subtle); display: none;" />
+              <div style="display: flex; flex-direction: column; gap: 0.25rem; flex-grow: 1;">
+                <input type="file" id="edit-adv-image-file" accept="image/*" class="form-input" style="font-size: 0.75rem; padding: 0.25rem; width: 100%;" />
+                <button type="button" class="btn btn-secondary btn-sm" id="edit-adv-clear-image-btn" style="padding: 0.15rem 0.4rem; font-size: 0.65rem; border-radius: 4px; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: var(--color-danger); width: fit-content; display: none;">ลบรูปภาพ (ใช้ Avatar แทน)</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" id="edit-adv-cancel-btn" style="font-size: 0.85rem; padding: 0.5rem 1rem;">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">บันทึกการแก้ไข</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `;
 
   // Attach Dashboard Event Listeners
@@ -576,17 +609,6 @@ function renderDashboardScreen(container) {
     });
   });
 
-  // Toggle Admin Student List Boxes
-  const adminToggleButtons = document.querySelectorAll('.toggle-admin-student-btn');
-  adminToggleButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const box = btn.nextElementSibling;
-      const isHidden = box.style.display === 'none';
-      box.style.display = isHidden ? 'block' : 'none';
-      btn.querySelector('.indicator').textContent = isHidden ? '▲' : '▼';
-    });
-  });
-
   // Filter Dropdown Change
   const advisorFilter = document.getElementById('admin-advisor-filter');
   if (advisorFilter) {
@@ -682,6 +704,149 @@ function renderDashboardScreen(container) {
         const data = await res.json();
         if (data.success) {
           newAdvisorImageBase64 = ''; // Reset base64
+          await fetchAdminState();
+          renderApp();
+          createToast(data.message, "success");
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        createToast(err.message, "error");
+      }
+    });
+  }
+
+  // Edit Advisor Event Listeners
+  let editAdvisorImageBase64 = '';
+  const editAdvisorModal = document.getElementById('edit-advisor-modal');
+  const editAdvisorForm = document.getElementById('edit-advisor-form');
+
+  const editAdvisorButtons = document.querySelectorAll('.edit-advisor-btn');
+  editAdvisorButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const adv = state.advisors.find(a => a.id === id);
+      if (!adv) return;
+
+      document.getElementById('edit-adv-id').value = adv.id;
+      document.getElementById('edit-adv-name').value = adv.name;
+      document.getElementById('edit-adv-email').value = adv.email || '';
+      document.getElementById('edit-adv-capacity').value = adv.capacity;
+      document.getElementById('edit-adv-interests').value = adv.interests.join(', ');
+
+      const preview = document.getElementById('edit-adv-image-preview');
+      const clearBtn = document.getElementById('edit-adv-clear-image-btn');
+      const fileInput = document.getElementById('edit-adv-image-file');
+
+      // Reset file input
+      if (fileInput) fileInput.value = '';
+
+      if (adv.imageUrl) {
+        editAdvisorImageBase64 = adv.imageUrl;
+        preview.src = adv.imageUrl;
+        preview.style.display = 'block';
+        clearBtn.style.display = 'block';
+      } else {
+        editAdvisorImageBase64 = '';
+        preview.src = '';
+        preview.style.display = 'none';
+        clearBtn.style.display = 'none';
+      }
+
+      editAdvisorModal.classList.add('show');
+    });
+  });
+
+  const editAdvCancelBtn = document.getElementById('edit-adv-cancel-btn');
+  if (editAdvCancelBtn) {
+    editAdvCancelBtn.addEventListener('click', () => {
+      editAdvisorModal.classList.remove('show');
+    });
+  }
+
+  // Close when clicking outside of modal content
+  editAdvisorModal.addEventListener('click', (e) => {
+    if (e.target === editAdvisorModal) {
+      editAdvisorModal.classList.remove('show');
+    }
+  });
+
+  const editFileInput = document.getElementById('edit-adv-image-file');
+  if (editFileInput) {
+    editFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size > 800 * 1024) {
+          createToast("ขนาดรูปภาพต้องไม่เกิน 800KB", "error");
+          editFileInput.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          editAdvisorImageBase64 = event.target.result;
+          const preview = document.getElementById('edit-adv-image-preview');
+          const clearBtn = document.getElementById('edit-adv-clear-image-btn');
+          if (preview) {
+            preview.src = editAdvisorImageBase64;
+            preview.style.display = 'block';
+          }
+          if (clearBtn) {
+            clearBtn.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  const editClearImageBtn = document.getElementById('edit-adv-clear-image-btn');
+  if (editClearImageBtn) {
+    editClearImageBtn.addEventListener('click', () => {
+      editAdvisorImageBase64 = '';
+      const preview = document.getElementById('edit-adv-image-preview');
+      const fileInput = document.getElementById('edit-adv-image-file');
+      if (preview) {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      editClearImageBtn.style.display = 'none';
+    });
+  }
+
+  if (editAdvisorForm) {
+    editAdvisorForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('edit-adv-id').value;
+      const name = document.getElementById('edit-adv-name').value.trim();
+      const email = document.getElementById('edit-adv-email').value.trim();
+      const capacity = document.getElementById('edit-adv-capacity').value.trim();
+      const interestsInput = document.getElementById('edit-adv-interests').value.trim();
+
+      const interests = interestsInput.split(',').map(s => s.trim()).filter(Boolean);
+
+      try {
+        const res = await fetch(`/api/admin/advisors/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': state.password
+          },
+          body: JSON.stringify({
+            name,
+            email: email || null,
+            capacity: parseInt(capacity, 10),
+            interests,
+            imageUrl: editAdvisorImageBase64 || null
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          editAdvisorModal.classList.remove('show');
           await fetchAdminState();
           renderApp();
           createToast(data.message, "success");

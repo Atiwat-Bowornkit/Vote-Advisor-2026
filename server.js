@@ -342,6 +342,65 @@ app.post('/api/admin/advisors', checkAdminAuth, (req, res) => {
   }
 });
 
+// Admin endpoint: Update advisor (Protected)
+app.put('/api/admin/advisors/:id', checkAdminAuth, (req, res) => {
+  const advisorId = req.params.id;
+  const { name, capacity, interests, email, imageUrl } = req.body;
+
+  if (!name || !capacity) {
+    return res.status(400).json({ success: false, message: "ข้อมูลไม่ครบถ้วน กรุณากรอกชื่อและจำนวนที่รับเป็นอย่างน้อย" });
+  }
+
+  // Parse interests (comma-separated or array)
+  let parsedInterests = [];
+  if (Array.isArray(interests)) {
+    parsedInterests = interests;
+  } else if (typeof interests === 'string') {
+    parsedInterests = interests.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  try {
+    // Check if advisor exists
+    const advisor = db.prepare('SELECT imageUrl FROM advisors WHERE id = ?').get(advisorId);
+    if (!advisor) {
+      return res.status(404).json({ success: false, message: "ไม่พบข้อมูลอาจารย์ที่ต้องการแก้ไข" });
+    }
+
+    let updatedImageUrl = imageUrl;
+    if (imageUrl === undefined) {
+      updatedImageUrl = advisor.imageUrl;
+    }
+
+    db.prepare(`
+      UPDATE advisors
+      SET name = ?, capacity = ?, interests = ?, email = ?, imageUrl = ?
+      WHERE id = ?
+    `).run(
+      name.trim(),
+      parseInt(capacity, 10),
+      JSON.stringify(parsedInterests),
+      email ? email.trim() : null,
+      updatedImageUrl ? updatedImageUrl.trim() : null,
+      advisorId
+    );
+
+    res.json({
+      success: true,
+      message: `แก้ไขข้อมูลอาจารย์ ${name} สำเร็จ`,
+      data: {
+        id: advisorId,
+        name: name.trim(),
+        capacity: parseInt(capacity, 10),
+        interests: parsedInterests,
+        email: email ? email.trim() : null,
+        imageUrl: updatedImageUrl ? updatedImageUrl.trim() : null
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Admin endpoint: Delete advisor (Protected)
 app.delete('/api/admin/advisors/:id', checkAdminAuth, (req, res) => {
   const advisorId = req.params.id;
